@@ -206,6 +206,8 @@ func (m *BookResult) ToBookResult(book Book) *BookResult {
 	m.IsDownload = book.IsDownload == 0
 	m.AutoSave = book.AutoSave == 1
 	m.ItemId = book.ItemId
+	m.RoleId = -1
+	m.MemberId = -1
 
 	if book.Theme == "" {
 		m.Theme = "default"
