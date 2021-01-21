@@ -224,7 +224,7 @@ $(function () {
             timeout : 30000,
             dataType: "json",
             success: function (res) {
-                if (res.errcode === 0) {
+                if (res.errcode === 0 || res.errcode === 1) {
                     resetEditorChanged(false);
                     for (var i in window.documentCategory) {
                         var item = window.documentCategory[i];
@@ -241,6 +241,11 @@ $(function () {
                             window.documentCategory[i].version = res.data.version;
                         }
                     });
+
+                    if(res.errcode === 1){
+                        layer.msg(res.message);
+                    }
+
                     if (typeof callback === "function") {
                         callback();
                     }

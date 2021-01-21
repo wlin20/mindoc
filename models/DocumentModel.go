@@ -384,27 +384,28 @@ func (item *Document) Processor() *Document {
 /*
  将文档内容保存到磁盘，包括 md 内容 和 htm 内容
 */
-func (doc *Document) SaveDocToDisk() error {
+func (doc *Document) SaveDocToDisk() (bool, string) {
 
 	var saveFolder string = filepath.Join(conf.WorkingDirectory, "uploads", "static_docs", "books", strconv.Itoa(doc.BookId), doc.Identify)
+	var errMsg string
 
 	if err := os.RemoveAll(saveFolder); err != nil {
-		beego.Error("清空文档目录失败 -> ", saveFolder, err)
-		return err
+		beego.Error("清空文档[", doc.Identify, "]static目录失败 -> ", saveFolder, err)
+		errMsg = err.Error() + errMsg
 	}
 	var mdPath = filepath.Join(saveFolder, doc.DocumentName+".md")
 	if err := doc.saveContentToDisk(mdPath, doc.Markdown); err != nil {
-		beego.Error("生成md文件失败 -> ", mdPath, err)
-		return err
+		beego.Error("生成文档[", doc.Identify, "]md文件失败 -> ", mdPath, err)
+		errMsg = err.Error() + errMsg
 	}
 
 	var htmlPath = filepath.Join(saveFolder, doc.DocumentName+".htm")
 	if err := doc.saveContentToDisk(htmlPath, doc.Content); err != nil {
-		beego.Error("生成htm文件失败 -> ", htmlPath, err)
-		return err
+		beego.Error("生成[", doc.Identify, "]htm文件失败 -> ", htmlPath, err)
+		errMsg = err.Error() + errMsg
 	}
 
-	return nil
+	return errMsg == "", errMsg
 }
 
 func (c *Document) saveContentToDisk(filePath, writeContent string) error {

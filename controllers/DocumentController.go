@@ -774,9 +774,9 @@ func (c *DocumentController) Content() {
 		}
 
 		// 持久化内容到磁盘
-		if err := doc.SaveDocToDisk(); err != nil {
+		if success, err := doc.SaveDocToDisk(); !success {
 			beego.Error("Document SaveDocToDisk Error => ", err)
-			c.JsonResult(60035, "文档持久化成功，但文件系统生成失败", doc)
+			c.JsonResult(1, "文档持久化成功，但文件系统生成时存在异常", doc)
 		}
 
 		c.JsonResult(0, "ok", doc)
