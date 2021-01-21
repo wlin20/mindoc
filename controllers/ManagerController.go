@@ -413,7 +413,7 @@ func (c *ManagerController) DeleteBook() {
 	}
 	book := models.NewBook()
 
-	err := book.ThoroughDeleteBook(bookId)
+	err := book.ThoroughDeleteBook(bookId, false)
 
 	if err == orm.ErrNoRows {
 		c.JsonResult(6002, "项目不存在")

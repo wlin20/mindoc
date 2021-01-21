@@ -405,7 +405,7 @@ ORDER BY book.order_index, book.book_id DESC limit ?,?`
 }
 
 // 彻底删除项目.
-func (book *Book) ThoroughDeleteBook(id int) error {
+func (book *Book) ThoroughDeleteBook(id int, deepDel bool) error {
 	if id <= 0 {
 		return ErrInvalidParameter
 	}
@@ -417,19 +417,28 @@ func (book *Book) ThoroughDeleteBook(id int) error {
 	}
 	o.Begin()
 
-	//删除附件,这里没有删除实际物理文件
-	_, err = o.Raw("DELETE FROM "+NewAttachment().TableNameWithPrefix()+" WHERE book_id=?", book.BookId).Exec()
-	if err != nil {
-		o.Rollback()
-		return err
-	}
+	// 深度删除，把关联的文档和附件一并删除
+	if deepDel {
+		//删除附件,这里没有删除实际物理文件
+		_, err = o.Raw("DELETE FROM "+NewAttachment().TableNameWithPrefix()+" WHERE book_id=?", book.BookId).Exec()
+		if err != nil {
+			o.Rollback()
+			return err
+		}
 
-	//删除文档
-	_, err = o.Raw("DELETE FROM "+NewDocument().TableNameWithPrefix()+" WHERE book_id = ?", book.BookId).Exec()
+		//删除附件和图片
+		if err := os.RemoveAll(filepath.Join(conf.WorkingDirectory, "uploads", book.Identify)); err != nil {
+			beego.Error("删除项目附件和图片失败 ->", err)
+		}
 
-	if err != nil {
-		o.Rollback()
-		return err
+		//删除文档
+		_, err = o.Raw("DELETE FROM "+NewDocument().TableNameWithPrefix()+" WHERE book_id = ?", book.BookId).Exec()
+
+		if err != nil {
+			o.Rollback()
+			return err
+		}
+
 	}
 	//删除项目
 	_, err = o.Raw("DELETE FROM "+book.TableNameWithPrefix()+" WHERE book_id = ?", book.BookId).Exec()
@@ -464,10 +473,6 @@ func (book *Book) ThoroughDeleteBook(id int) error {
 	//删除导出缓存
 	if err := os.RemoveAll(filepath.Join(conf.GetExportOutputPath(), strconv.Itoa(id))); err != nil {
 		beego.Error("删除项目缓存失败 ->", err)
-	}
-	//删除附件和图片
-	if err := os.RemoveAll(filepath.Join(conf.WorkingDirectory, "uploads", book.Identify)); err != nil {
-		beego.Error("删除项目附件和图片失败 ->", err)
 	}
 
 	return o.Commit()
