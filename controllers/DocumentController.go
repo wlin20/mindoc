@@ -773,6 +773,9 @@ func (c *DocumentController) Content() {
 			}()
 		}
 
+		// 持久化内容到磁盘
+		doc.SaveDocToDisk()
+
 		c.JsonResult(0, "ok", doc)
 	}
 

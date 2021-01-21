@@ -1,6 +1,7 @@
 package models
 
 import (
+	"io/ioutil"
 	"time"
 
 	"fmt"
@@ -284,7 +285,7 @@ func (item *Document) Processor() *Document {
 					}
 					content.WriteString("</ul></div>")
 					if docQuery == nil {
-						docQuery, err = goquery.NewDocumentFromReader(content);
+						docQuery, err = goquery.NewDocumentFromReader(content)
 					} else {
 						if selector := docQuery.Find("div.wiki-bottom").First(); selector.Size() > 0 {
 							selector.BeforeHtml(content.String())
@@ -355,7 +356,7 @@ func (item *Document) Processor() *Document {
 						selection.SetAttr("href", "#")
 						return
 					}
-					val = strings.Replace(strings.ToLower(val), " ", "",-1)
+					val = strings.Replace(strings.ToLower(val), " ", "", -1)
 					//移除危险脚本链接
 					if strings.HasPrefix(val, "data:text/html") ||
 						strings.HasPrefix(val, "vbscript:") ||
@@ -378,4 +379,63 @@ func (item *Document) Processor() *Document {
 		}
 	}
 	return item
+}
+
+/*
+ 将文档内容保存到磁盘，包括 md 内容 和 htm 内容
+*/
+func (doc *Document) SaveDocToDisk() error {
+
+	var saveFolder string = filepath.Join(conf.WorkingDirectory, "uploads", "static_docs", "books", strconv.Itoa(doc.BookId), doc.Identify)
+
+	if err := os.RemoveAll(saveFolder); err != nil {
+		beego.Error("清空文档目录失败 -> ", saveFolder, err)
+		return err
+	}
+	var mdPath = filepath.Join(saveFolder, doc.DocumentName+".md")
+	if err := doc.saveContentToDisk(mdPath, doc.Markdown); err != nil {
+		beego.Error("生成md文件失败 -> ", mdPath, err)
+		return err
+	}
+
+	var htmlPath = filepath.Join(saveFolder, doc.DocumentName+".htm")
+	if err := doc.saveContentToDisk(htmlPath, doc.Content); err != nil {
+		beego.Error("生成htm文件失败 -> ", htmlPath, err)
+		return err
+	}
+
+	return nil
+}
+
+func (c *Document) saveContentToDisk(filePath, writeContent string) error {
+
+	path := filepath.Dir(filePath)
+	if err := os.MkdirAll(path, 0644); err != nil {
+		beego.Error("创建目录失败 -> ", filePath, err)
+		return err
+	}
+
+	//var writeBytes = []byte(writeContent)
+	err := ioutil.WriteFile(filePath, []byte(writeContent), 0644) //写入文件([]byte(writeContent)字节数组)
+	handleIfIOErr(err)
+
+	return err
+}
+
+/**
+ * 判断文件是否存在  存在返回 true 不存在返回false
+ */
+func checkFileIsExist(filename string) bool {
+	var exist = true
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		exist = false
+	}
+	return exist
+}
+
+func handleIfIOErr(e error) {
+	if e != nil {
+		beego.Error("文件操作异常 =>", e)
+		panic(e)
+	}
 }
