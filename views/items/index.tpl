@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>项目空间列表 - Powered by MinDoc</title>
+    <title>文库空间列表 - Powered by MinDoc</title>
     <meta name="keywords" content="MinDoc,文档在线管理系统,WIKI,wiki,wiki在线,文档在线管理,接口文档在线管理,接口文档管理">
     <meta name="description" content="MinDoc文档在线管理系统 {{.site_description}}">
     <meta name="author" content="Minho" />
@@ -22,7 +22,7 @@
 {{template "widgets/header.tpl" .}}
     <div class="container manual-body">
         <div class="search-head">
-            <strong class="search-title">项目空间列表</strong>
+            <strong class="search-title">文库空间列表</strong>
         </div>
         <div class="row">
             <div class="hide tag-container-outer" style="border: 0;margin-top: 0;padding: 5px 15px;min-height: 200px;">
@@ -35,7 +35,7 @@
                 {{else}}
                     <div class="search-empty">
                         <img src="{{cdnimg "/static/images/search_empty.png"}}" class="empty-image">
-                        <span class="empty-text">没有项目空间</span>
+                        <span class="empty-text">没有文库空间</span>
                     </div>
                 {{end}}
                 </div>
