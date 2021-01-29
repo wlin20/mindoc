@@ -45,7 +45,7 @@
                                 <a href="{{urlfor "SettingController.Index"}}" title="个人中心"><i class="fa fa-user" aria-hidden="true"></i> 个人中心</a>
                             </li>
                             <li>
-                                <a href="{{urlfor "BookController.Index"}}" title="我的项目"><i class="fa fa-book" aria-hidden="true"></i> 我的项目</a>
+                                <a href="{{urlfor "BookController.Index"}}" title="我的项目"><i class="fa fa-book" aria-hidden="true"></i> 我的文库</a>
                             </li>
                             <li>
                                 <a href="{{urlfor "BlogController.ManageList"}}" title="我的文章"><i class="fa fa-file" aria-hidden="true"></i> 我的文章</a>
@@ -83,7 +83,7 @@
                             <a href="{{urlfor "SettingController.Index"}}" title="个人中心"><i class="fa fa-user" aria-hidden="true"></i> 个人中心</a>
                         </li>
                         <li>
-                            <a href="{{urlfor "BookController.Index"}}" title="我的项目"><i class="fa fa-book" aria-hidden="true"></i> 我的项目</a>
+                            <a href="{{urlfor "BookController.Index"}}" title="我的项目"><i class="fa fa-book" aria-hidden="true"></i> 我的文库</a>
                         </li>
                         <li>
                             <a href="{{urlfor "BlogController.ManageList"}}" title="我的文章"><i class="fa fa-file" aria-hidden="true"></i> 我的文章</a>
