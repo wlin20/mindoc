@@ -35,6 +35,7 @@ type BookResult struct {
 	BookName       string    `json:"book_name"`
 	ItemId         int       `json:"item_id"`
 	ItemName       string    `json:"item_name"`
+	ItemKey        string    `json:"item_key"`
 	Identify       string    `json:"identify"`
 	OrderIndex     int       `json:"order_index"`
 	Description    string    `json:"description"`
@@ -232,6 +233,7 @@ func (m *BookResult) ToBookResult(book Book) *BookResult {
 	if m.ItemId > 0 {
 		if item, err := NewItemsets().First(m.ItemId); err == nil {
 			m.ItemName = item.ItemName
+			m.ItemKey = item.ItemKey
 		}
 	}
 	return m
