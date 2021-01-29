@@ -12,14 +12,19 @@
 
             <nav class="collapse navbar-collapse col-sm-10">
                 <ul class="nav navbar-nav">
+                    <!-- 暂时去除首页，待规划后添加
                     <li {{if eq .ControllerName "HomeController"}}class="active"{{end}}>
                         <a href="{{urlfor "HomeController.Index" }}" title="首页">首页</a>
                     </li>
+                    -->
                     <li {{if eq .ControllerName "BlogController"}}{{if eq  .ActionName "List" "Index"}}class="active"{{end}}{{end}}>
                         <a href="{{urlfor "BlogController.List" }}" title="文章">文章</a>
                     </li>
+                    <li {{if eq .ControllerName "HomeController"}}class="active"{{end}}>
+                        <a href="{{urlfor "HomeController.Index" }}" title="文库">文库</a>
+                    </li>
                     <li {{if eq .ControllerName "ItemsetsController"}}class="active"{{end}}>
-                        <a href="{{urlfor "ItemsetsController.Index" }}" title="项目空间">项目空间</a>
+                        <a href="{{urlfor "ItemsetsController.Index" }}" title="项目空间">文库空间</a>
                     </li>
                 </ul>
                 <div class="searchbar pull-left visible-lg-inline-block visible-md-inline-block">
