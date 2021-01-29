@@ -61,13 +61,14 @@ textarea{
 }
 .manual-header  .navbar-brand,.manual-header a {
     font-weight: 500;
-    color: #563d7c;
+    color: #595959;
     max-width: 300px;
     white-space:nowrap;
     overflow: hidden;
 }
 .manual-header .navbar-nav li.active a{
-    background-color: #009a61;
+    font-weight: bold;
+    background-color: #679282;
     color: #ffffff;
 }
 .manual-reader .slidebar {
@@ -237,6 +238,38 @@ textarea{
     right: 0;
     top: 34px
 }
+/**************logo样式********************/
+.logo-content{
+    line-height: 35px;
+    vertical-align:middle;
+    display: inline-block;
+    vertical-align: middle;
+}
+.logo-content a{
+    vertical-align: middle;
+    padding: 10px;
+    display: inline-block;
+}
+.logo-content a span{
+    line-height: 35px;
+    vertical-align: middle;
+    display: inline-block;
+    margin-right: 15px;
+}
+.logo-content a image{
+    line-height: 35px;
+    vertical-align: middle;
+    display: inline-block;
+    margin-right: 15px;
+}
+.logo-avatar{
+    display: inline-block;
+    width: 35px;
+    height: 35px;
+}
+
+
+
 /*************网站首页******************/
 .manual-list{
     margin: 15px auto;

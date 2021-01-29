@@ -1,13 +1,15 @@
 <header class="navbar navbar-static-top navbar-fixed-top manual-header" role="banner">
     <div class="container">
         <div class="navbar-header col-sm-12 col-md-9 col-lg-8">
-            <a href="{{.BaseUrl}}/" class="navbar-brand" title="{{.SITE_NAME}}">
-                {{if .SITE_TITLE}}
-                {{.SITE_TITLE}}
-                {{else}}
-                {{.SITE_NAME}}
-                {{end}}
-            </a>
+
+
+            <div class="logo-content pull-left">
+                <a href="{{.BaseUrl}}/" class="navbar-brand" title="{{.SITE_NAME}}">
+                    <img src="/static/images/logo.jpg"  class="img-circle logo-avatar pull-left" alt="">
+                    <span>{{if .SITE_TITLE}}{{.SITE_TITLE}}{{else}}{{.SITE_NAME}}{{end}}</span>
+                </a>
+            </div>
+
             <nav class="collapse navbar-collapse col-sm-10">
                 <ul class="nav navbar-nav">
                     <li {{if eq .ControllerName "HomeController"}}class="active"{{end}}>
