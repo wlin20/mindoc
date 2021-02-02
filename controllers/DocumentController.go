@@ -18,6 +18,7 @@ import (
 	"github.com/russross/blackfriday/v2"
 	"html/template"
 	"image/png"
+	"mime/multipart"
 	"net/http"
 	"net/url"
 	"os"
@@ -343,16 +344,23 @@ func (c *DocumentController) Upload() {
 		c.JsonResult(6001, "参数错误")
 	}
 
-	name := "editormd-file-file"
+	names := [...]string{"editormd-file-file", "editormd-image-file", "file[]"}
 
-	file, moreFile, err := c.GetFile(name)
-	if err == http.ErrMissingFile || moreFile == nil {
-		name = "editormd-image-file"
-		file, moreFile, err = c.GetFile(name)
-		if err == http.ErrMissingFile || moreFile == nil {
-			c.JsonResult(6003, "没有发现需要上传的文件")
-			return
+	var file multipart.File
+	var moreFile *multipart.FileHeader
+	var err error
+	var name string
+	for _, fileName := range names {
+		name = fileName
+		file, moreFile, err = c.GetFile(fileName)
+		if err == nil {
+			break
 		}
+	}
+
+	if err == http.ErrMissingFile || moreFile == nil {
+		c.JsonResult(6003, "没有发现需要上传的文件")
+		return
 	}
 
 	if err != nil {
@@ -1206,7 +1214,7 @@ func (c *DocumentController) Compare() {
 	c.Data["HistoryId"] = historyId
 	c.Data["DocumentId"] = doc.DocumentId
 
-	if editor == "markdown" {
+	if strings.Contains(editor, "markdown") {
 		c.Data["HistoryContent"] = history.Markdown
 		c.Data["Content"] = doc.Markdown
 	} else {
