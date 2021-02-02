@@ -183,6 +183,9 @@ func (c *DocumentController) Edit() {
 		c.ShowErrorPage(404, "无法解析项目标识")
 	}
 
+	// 获取编辑器名称
+	editor := c.GetString("editor")
+
 	bookResult := models.NewBookResult()
 
 	var err error
@@ -211,13 +214,17 @@ func (c *DocumentController) Edit() {
 		}
 	}
 
+	if editor == "undefined" || editor == "" || len(editor) == 0 {
+		editor = bookResult.Editor
+	}
+
 	// 根据不同编辑器类型加载编辑器
-	if bookResult.Editor == "markdown" {
+	if editor == "markdown" {
 		c.TplName = "document/markdown_edit_template.tpl"
-	} else if bookResult.Editor == "html" {
+	} else if editor == "html" {
 		c.TplName = "document/new_html_edit_template.tpl"
 	} else {
-		c.TplName = "document/" + bookResult.Editor + "_edit_template.tpl"
+		c.TplName = "document/" + editor + "_edit_template.tpl"
 	}
 
 	c.Data["Model"] = bookResult
