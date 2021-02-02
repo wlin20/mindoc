@@ -310,12 +310,12 @@ $(document).ready(function() {
 			if(window.top.hasOwnProperty("editor")){
                 if(window.top.editor.hasOwnProperty("$txt")){
                     window.top.editor.$txt.html(rhs);
+				}else if(window.top.editorType == "markdown.vditor"){
+					window.top.editor.setValue(rhs);
 				}else{
-
                     window.top.editor.clear();
                     window.top.editor.insertValue(rhs);
 				}
-
                 window.top.layer.closeAll();
 			}
 

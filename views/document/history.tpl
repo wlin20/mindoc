@@ -52,7 +52,7 @@
                     <button class="btn btn-success btn-sm restore-btn" data-id="{{$item.HistoryId}}" data-loading-text="恢复中...">
                         恢复
                     </button>
-                    {{if eq $.Model.Editor "markdown"}}
+                    {{if eq $.Model.Editor "markdown" "markdown.vditor"}}
                     <button class="btn btn-success btn-sm compare-btn" data-id="{{$item.HistoryId}}">
                         合并
                     </button>
