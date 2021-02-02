@@ -57,9 +57,10 @@
         }
     </style>
     <link href="{{cdncss "/static/css/header.book.css" "version"}}" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vditor@3.8.0/dist/index.css" />
+{{/*    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vditor@3.8.0/dist/index.css" />*/}}
 {{/*    <script src="https://cdn.jsdelivr.net/npm/vditor@3.8.0/dist/index.min.js"></script>*/}}
-    <script src="{{cdncss "/static/vditor/vditor.3.8.0.js" }}"></script>
+    <link rel="stylesheet" href="{{cdncss "/static/vditor@3.8.0/css/index.css" }}" />
+    <script src="{{cdnjs "/static/vditor@3.8.0/js/index.js" }}"></script>
 </head>
 <body id="vue">
 
