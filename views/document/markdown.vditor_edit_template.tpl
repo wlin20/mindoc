@@ -57,9 +57,9 @@
         }
     </style>
     <link href="{{cdncss "/static/css/header.book.css" "version"}}" rel="stylesheet">
-
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vditor@3.8.0/dist/index.css" />
-    <script src="https://cdn.jsdelivr.net/npm/vditor@3.8.0/dist/index.min.js"></script>
+{{/*    <script src="https://cdn.jsdelivr.net/npm/vditor@3.8.0/dist/index.min.js"></script>*/}}
+    <script src="{{cdncss "/static/vditor/vditor.3.8.0.js" }}"></script>
 </head>
 <body id="vue">
 
@@ -246,8 +246,8 @@
 <script src="{{cdnjs "/static/js/jquery.form.js"}}" type="text/javascript"></script>
 <script src="{{cdnjs "/static/js/array.js" "version"}}" type="text/javascript"></script>
 <script src="{{cdnjs "/static/js/editor.doctree.js" "version"}}" type="text/javascript"></script>
-<script src="{{cdnjs "/static/js/markdown.vditor.js" "version"}}" type="text/javascript"></script>
 {{ template "document/editor-toolbar.tpl" . }}
+<script src="{{cdnjs "/static/js/markdown.vditor.js" "version"}}" type="text/javascript"></script>
 <script type="text/javascript">
 
     $(function (){

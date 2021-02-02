@@ -310,7 +310,7 @@ $(document).ready(function() {
 			if(window.top.hasOwnProperty("editor")){
                 if(window.top.editor.hasOwnProperty("$txt")){
                     window.top.editor.$txt.html(rhs);
-				}else if(window.top.editorType == "markdown.vditor"){
+				}else if(window.top.editor.type == "markdown.vditor"){
 					window.top.editor.setValue(rhs);
 				}else{
                     window.top.editor.clear();

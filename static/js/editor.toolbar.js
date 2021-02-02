@@ -1,13 +1,19 @@
 $(function () {
 
-    window.editorTypes = {
-        markdown_vditor:"markdown.vditor",
-        markdown_default: "markdown",
-        html_default:"html"
-    }
-
-
-    window.toobarFunction = {
+    window.editorTool = {
+        editorTypes : {
+            markdown_vditor:"markdown.vditor",
+            markdown_default: "markdown",
+            html_default:"html"
+        },
+        wrapEditor: function (editor,initConfig,editorType,setValue,getMarkdown,getHTML){
+            editor.type = editorType
+            editor.initConig = initConfig
+            editor.setValue = setValue
+            editor.getMarkdown = getMarkdown             
+            editor.getHTML = getHTML
+            window.editor = editor
+        },
         documentHistory: function () {
             layer.open({
                 type: 2,
@@ -36,7 +42,7 @@ $(function () {
         saveDocument: function ($is_cover, callback) {
             var index = null;
             var node = window.selectNode;
-            var content = window.editor.getValue();
+            var content = window.editor.getMarkdown();
             var html = window.editor.getHTML();
             var version = "";
 
@@ -71,7 +77,7 @@ $(function () {
                 dataType: "json",
                 success: function (res) {
                     if (res.errcode === 0 || res.errcode === 1) {
-                        window.toobarFunction.resetEditorChanged(false);
+                        window.editorTool.resetEditorChanged(false);
                         for (var i in window.documentCategory) {
                             var item = window.documentCategory[i];
 
@@ -128,7 +134,6 @@ $(function () {
                         return;
                     }
                 }
-                debugger
                 $.ajax({
                     url: window.releaseURL,
                     data: {"identify": window.book.identify},
@@ -147,8 +152,16 @@ $(function () {
             }
         },
         changeEditor : function(){
-            let types = Object.values(window.editorTypes)
-            let next = (types.indexOf(window.editorType)+1) % types.length;
+            if ($("#markdown-save").hasClass('change')) {
+                var confirm_result = confirm("编辑内容未保存，需要保存吗？");
+                if (confirm_result) {
+                    this.saveDocument(false,this.changeEditor);
+                }
+                return
+            }
+
+            let types = Object.values(window.editorTool.editorTypes)
+            let next = (types.indexOf(window.editor.type)+1) % types.length;
             console.info("next:"+next)
             window.location.href = replaceParamVal(window,"editor",types[next],true);
         },
@@ -214,9 +227,9 @@ $(function () {
        if (name === "attachment") {
            $("#uploadAttachModal").modal("show");
        } else if (name === "history") {
-           window.toobarFunction.documentHistory()
+           window.editorTool.documentHistory()
        } else if (name === "save") {
-           window.toobarFunction.saveDocument(false)
+           window.editorTool.saveDocument(false)
        } else if (name === "template") {
            $("#documentTemplateModal").modal("show");
        } else if(name === "save-template"){
@@ -224,9 +237,9 @@ $(function () {
        } else if(name === 'json'){
            $("#convertJsonToTableModal").modal("show");
        }  else if (name === "release") {
-           window.toobarFunction.releaseBook()
+           window.editorTool.releaseBook()
        }  else if (name === "changeEditor") {
-           window.toobarFunction.changeEditor()
+           window.editorTool.changeEditor()
        } else if (name === "sidebar") {
            $("#manualCategory").toggle(0, "swing", function () {
                let $then = $("#manualEditorContainer");
@@ -237,12 +250,12 @@ $(function () {
                } else {
                    $then.css("left", window.editorContainerLeft + "px");
                }
-               if(window.editorType != window.editorTypes.markdown_vditor) {
+               if(window.editor.type != window.editorTool.editorTypes.markdown_vditor) {
                    window.editor.resize();
                }
            });
        } else if (name === "tasks") {
-           if(window.editorType == window.editorTypes.markdown_default) {
+           if(window.editor.type == window.editor.types.markdown_default) {
                // 插入 GFM 任务列表
                var cm = window.editor.cm;
                var selection = cm.getSelection();
@@ -261,7 +274,7 @@ $(function () {
                }
            }
        } else {
-           if(window.editorType == window.editorTypes.markdown_default) {
+           if(window.editor.type == window.editorTool.editorTypes.markdown_default) {
                let action = window.editor.toolbarHandlers[name];
 
                if (action !== "undefined") {
@@ -299,7 +312,7 @@ $(function () {
         if (body) {
             window.isLoad = true;
             window.editor.insertValue(body,true);
-            window.toobarFunction.resetEditorChanged(true);
+            window.editorTool.resetEditorChanged(true);
         }
         $("#documentTemplateModal").modal('hide');
     });
@@ -394,7 +407,7 @@ $(function () {
                }
                 window.isLoad = true;
                 window.editor.insertValue($res.data.template_content,true);
-                window.toobarFunction.resetEditorChanged(true);
+                window.editorTool.resetEditorChanged(true);
                 $("#displayCustomsTemplateModal").modal("hide");
             },error : function () {
                 layer.msg("服务器异常");
@@ -451,7 +464,7 @@ $(function () {
 
     function insertToMarkdown(body) {
         window.isLoad = true;
-        if(window.editorType == "vditor"){
+        if(window.editor.type == "vditor"){
             var strongs = document.getElementsByTagName("strong");
             var s = window.getSelection();
 
@@ -464,7 +477,7 @@ $(function () {
             }
         }
         window.editor.insertValue(body,true);
-        window.toobarFunction.resetEditorChanged(true);
+        window.editorTool.resetEditorChanged(true);
     }
 
     // ############################ 文档模板功能 end ######################//

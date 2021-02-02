@@ -406,7 +406,7 @@ $(function (){
 
         if ($("#markdown-save").hasClass('change')) {
             if (confirm("编辑内容未保存，需要保存吗？")) {
-                saveDocument(false, function () {
+                window.editorTool.saveDocument(false, function () {
                     loadDocument(selected);
                 });
                 return true;
