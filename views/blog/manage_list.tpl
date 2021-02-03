@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>我的文章 - Powered by MinDoc</title>
+    <title>我的文章</title>
 
     <!-- Bootstrap -->
     <link href="{{cdncss "/static/bootstrap/css/bootstrap.min.css"}}" rel="stylesheet" type="text/css">
@@ -44,7 +44,7 @@
                         {{range $index,$item := .ModelList}}
                             <div class="item blog-item">
                                 <div class="content">
-                                    <a class="header" href="{{urlfor "BlogController.Index" ":id" $item.BlogId}}" target="_blank">
+                                    <a class="header" href="{{urlfor "BlogController.Index" ":id" $item.BlogId}}" >
                                         {{if eq $item.BlogStatus "password"}}
                                         <div class="ui teal label horizontal" data-tooltip="加密">密</div>
                                         {{end}}

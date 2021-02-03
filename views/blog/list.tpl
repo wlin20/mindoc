@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>文章列表 - Powered by MinDoc</title>
+    <title>文章列表 </title>
     <meta name="keywords" content="MinDoc,文档在线管理系统,WIKI,wiki,wiki在线,文档在线管理,接口文档在线管理,接口文档管理">
     <meta name="description" content="MinDoc文档在线管理系统 {{.site_description}}">
     <!-- Bootstrap -->
@@ -30,7 +30,7 @@
             <div class="manual-list">
             {{range $index,$item := .Lists}}
                 <div class="search-item">
-                    <div class="title">{{if eq $item.BlogStatus "password"}}<span class="label">密</span>{{end}} <a href="{{urlfor "BlogController.Index" ":id" $item.BlogId}}" title="{{$item.BlogTitle}}" target="_blank">{{$item.BlogTitle}}</a> </div>
+                    <div class="title">{{if eq $item.BlogStatus "password"}}<span class="label">密</span>{{end}} <a href="{{urlfor "BlogController.Index" ":id" $item.BlogId}}" title="{{$item.BlogTitle}}" >{{$item.BlogTitle}}</a> </div>
                     <div class="description">
                     {{$item.BlogExcerpt}}
                     </div>
