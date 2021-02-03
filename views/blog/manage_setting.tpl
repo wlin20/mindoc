@@ -74,20 +74,23 @@
                             <label>文章状态</label>
                             <div class="radio">
                                 <label class="radio-inline">
-                                    <input type="radio" {{if eq .Model.BlogStatus "public"}}checked{{end}} name="status" value="public">公开<span class="text"></span>
+                                    <input type="radio" {{if eq .Model.BlogStatus "self"}}checked{{end}} name="status" value="self">私密（仅自己可见）<span class="text"></span>
                                 </label>
                                 <label class="radio-inline">
-                                    <input type="radio" {{if eq .Model.BlogStatus "password"}}checked{{end}} name="status" value="password">加密<span class="text"></span>
+                                    <input type="radio" {{if eq .Model.BlogStatus "public"}}checked{{end}} name="status" value="public">公开（所有人可见）<span class="text"></span>
+                                </label>
+                                <label class="radio-inline">
+                                    <input type="radio" {{if eq .Model.BlogStatus "password"}}checked{{end}} name="status" value="password">加密（输入密码可见）<span class="text"></span>
                                 </label>
                             </div>
                         </div>
-                        <div class="form-group"{{if eq .Model.BlogStatus "public"}} style="display: none;"{{end}} id="blogPassword">
+                        <div class="form-group"{{if ne .Model.BlogStatus "password"}} style="display: none;"{{end}} id="blogPassword">
                             <label>文章密码</label>
                             <input type="password" class="form-control" name="password" id="password" placeholder="文章密码" value="{{.Model.Password}}" maxlength="20">
                         </div>
                         <div class="form-group">
                             <label>文章摘要</label>
-                            <textarea rows="3" class="form-control" name="excerpt" style="height: 90px" placeholder="项目描述">{{.Model.BlogExcerpt}}</textarea>
+                            <textarea rows="3" class="form-control" name="excerpt" style="height: 90px" placeholder="文章摘要">{{.Model.BlogExcerpt}}</textarea>
                             <p class="text">文章摘要不超过500个字符</p>
                         </div>
 

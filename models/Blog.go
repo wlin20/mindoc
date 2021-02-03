@@ -42,8 +42,8 @@ type Blog struct {
 	BlogContent string `orm:"column(blog_content);type(text);null" json:"blog_content"`
 	//发布后的文章内容
 	BlogRelease string `orm:"column(blog_release);type(text);null" json:"blog_release"`
-	//文章当前的状态，枚举enum(’publish’,’draft’,’password’)值，publish为已 发表，draft为草稿，password 为私人内容(不会被公开) 。默认为publish。
-	BlogStatus string `orm:"column(blog_status);size(100);default(publish)" json:"blog_status"`
+	//文章当前的状态，枚举enum(‘self’,’publish’,’draft’,’password’)值，self为 只有自己可读，publish为已发表所有人可读，draft为草稿，password 为私人内容(不会被公开) 。默认为 self。
+	BlogStatus string `orm:"column(blog_status);size(100);default(self)" json:"blog_status"`
 	//文章密码，varchar(100)值。文章编辑才可为文章设定一个密码，凭这个密码才能对文章进行重新强加或修改。
 	Password string `orm:"column(password);size(100)" json:"-"`
 	//最后修改时间
@@ -83,7 +83,7 @@ func (b *Blog) TableNameWithPrefix() string {
 
 func NewBlog() *Blog {
 	return &Blog{
-		BlogStatus: "public",
+		BlogStatus: "self",
 	}
 }
 
@@ -102,9 +102,9 @@ func (b *Blog) Find(blogId int) (*Blog, error) {
 
 //从缓存中读取文章
 func (b *Blog) FindFromCache(blogId int) (blog *Blog, err error) {
-	key := fmt.Sprintf("blog-id-%d", blogId);
+	key := fmt.Sprintf("blog-id-%d", blogId)
 	var temp Blog
-	err = cache.Get(key, &temp);
+	err = cache.Get(key, &temp)
 	if err == nil {
 		b = &temp
 		b.Link()
@@ -173,13 +173,13 @@ func (b *Blog) Link() (*Blog, error) {
 			//处理链接文档存在源文档修改时间的问题
 			if content, err := goquery.NewDocumentFromReader(bytes.NewBufferString(b.BlogRelease)); err == nil {
 				content.Find(".wiki-bottom").Remove()
-				if html,err := content.Html();err == nil {
+				if html, err := content.Html(); err == nil {
 					b.BlogRelease = html
 				} else {
-					beego.Error("处理文章失败 ->",err)
+					beego.Error("处理文章失败 ->", err)
 				}
-			}else {
-				beego.Error("处理文章失败 ->",err)
+			} else {
+				beego.Error("处理文章失败 ->", err)
 			}
 		}
 	}
@@ -223,7 +223,7 @@ func (b *Blog) Save(cols ...string) error {
 	if b.OrderIndex <= 0 {
 		blog := NewBlog()
 		if err := o.QueryTable(blog.TableNameWithPrefix()).OrderBy("-blog_id").Limit(1).One(blog, "blog_id"); err == nil {
-			b.OrderIndex = blog.BlogId + 1;
+			b.OrderIndex = blog.BlogId + 1
 		} else {
 			c, _ := o.QueryTable(b.TableNameWithPrefix()).Count()
 			b.OrderIndex = int(c) + 1
