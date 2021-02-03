@@ -364,14 +364,15 @@ func (c *BlogController) ManageEdit() {
 	var blog *models.Blog
 	var err error
 
-	if c.Member.IsAdministrator() {
-		blog, err = models.NewBlog().Find(blogId)
-	} else {
-		blog, err = models.NewBlog().FindByIdAndMemberId(blogId, c.Member.MemberId)
-	}
+	blog, err = models.NewBlog().Find(blogId)
+
 	if err != nil {
 		c.ShowErrorPage(404, "文章不存在或已删除")
 	}
+	if !c.Member.IsAdministrator() && blog.MemberId != c.Member.MemberId {
+		c.ShowErrorPage(401, "没有权限编辑此文件！")
+	}
+
 	blog.LinkAttach()
 
 	if len(blog.AttachList) > 0 {
