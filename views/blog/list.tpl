@@ -38,6 +38,10 @@
                     <div class="source">
                         <span class="item">作者：{{$item.CreateName}}</span>
                         <span class="item">更新时间：{{date_format  $item.Modified "2006-01-02 15:04:05"}}</span>
+
+                        {{if or (eq $item.MemberId $.Member.MemberId)  (eq $.Member.Role 0 1)}}
+                            <div class="item"><a href='{{urlfor "BlogController.ManageEdit" ":id" $item.BlogId}}' title="文章编辑"><i class="fa fa-edit"></i> 编辑</a></div>
+                        {{end}}
                     </div>
                 </div>
             {{else}}
