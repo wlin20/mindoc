@@ -166,7 +166,7 @@ $(function () {
         }
     }
     let editor = new Vditor("vditor", initConfig);
-    editor.setTheme("dark" , "dark", "native")// 设置默认主题
+    editor.setTheme("classic" , "classic", "native")// 设置默认主题
 
     window.editorTool.wrapEditor(editor,initConfig,"markdown.vditor",editor.setValue,editor.getValue,editor.getHTML)
 
