@@ -988,6 +988,27 @@ textarea{
     border-color: #00b5ad!important;
     color: #fff!important
 }
+.blog-ui-password {
+    background-color: #e50829 !important;
+    border-color: #e50829 !important;
+    color: #fff!important
+}
+.blog-ui-self {
+    background-color: #00b5ad!important;
+    border-color: #00b5ad!important;
+    color: #fff!important
+}
+.blog-ui-public {
+    background-color: #3fb500 !important;
+    border-color: #12b500 !important;
+    color: #fff!important
+}
+.blog-ui-link {
+    background-color: #99d7f8 !important;
+    border-color: #5879a9 !important;
+    color: #fff!important
+}
+
 .ui.items>.item {
     border-bottom: 1px solid #efefef;
     margin: 0;

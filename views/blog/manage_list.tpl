@@ -46,10 +46,19 @@
                                 <div class="content">
                                     <a class="header" href="{{urlfor "BlogController.Index" ":id" $item.BlogId}}" >
                                         {{if eq $item.BlogStatus "password"}}
-                                        <div class="ui teal label horizontal" data-tooltip="加密">密</div>
+                                        <div class="label horizontal blog-ui-password" data-tooltip="加密">加密</div>
+                                        {{else if eq $item.BlogStatus "public"}}
+                                        <div class="label horizontal blog-ui-public " data-tooltip="加密">公共</div>
+                                        {{else if eq $item.BlogStatus "self"}}
+                                        <div class="label horizontal blog-ui-self " data-tooltip="加密">私有</div>
                                         {{end}}
                                         {{$item.BlogTitle}}
                                     </a>
+                                    {{if eq $item.BlogType  1 }}
+                                        <a href='{{urlfor "DocumentController.Read" ":key" $item.BookIdentify ":id" $item.DocumentIdentify}}' title="在原文中查看">
+                                            <div class="label horizontal blog-ui-link " title="打开原文" >链</div>
+                                        </a>
+                                    {{end}}
                                     <div class="description">
                                         <p class="line-clamp">{{$item.BlogExcerpt}}&nbsp;</p>
                                     </div>
@@ -57,7 +66,11 @@
                                         <div>
                                             <div class="ui horizontal small list">
                                                 <div class="item"><i class="fa fa-clock-o"></i> {{date $item.Modified "Y-m-d H:i:s"}}</div>
+                                                {{if eq $item.BlogType  1 }}
+                                                <div class="item"><a href='{{urlfor "DocumentController.Read" ":key" $item.BookIdentify ":id" $item.DocumentIdentify}}' title="链接文章只支持在原文中编辑"><i class="fa fa-edit"></i>查看原文</a></div>
+                                                {{else}}
                                                 <div class="item"><a href="{{urlfor "BlogController.ManageEdit" ":id" $item.BlogId}}" title="文章编辑" target="_blank"><i class="fa fa-edit"></i> 编辑</a></div>
+                                                {{end}}
                                                 <div class="item"><a class="delete-btn" title="删除文章" data-id="{{$item.BlogId}}"><i class="fa fa-trash"></i> 删除</a></div>
                                                 <div class="item"><a href="{{urlfor "BlogController.ManageSetting" ":id" $item.BlogId}}" title="文章设置" class="setting-btn"><i class="fa fa-gear"></i> 设置</a></div>
                                             </div>

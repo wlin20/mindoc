@@ -74,7 +74,7 @@
                             <label>文章状态</label>
                             <div class="radio">
                                 <label class="radio-inline">
-                                    <input type="radio" {{if eq .Model.BlogStatus "self"}}checked{{end}} name="status" value="self">私密（仅自己可见）<span class="text"></span>
+                                    <input type="radio" {{if eq .Model.BlogStatus "self"}}checked{{end}} name="status" value="self">私有（仅自己可见）<span class="text"></span>
                                 </label>
                                 <label class="radio-inline">
                                     <input type="radio" {{if eq .Model.BlogStatus "public"}}checked{{end}} name="status" value="public">公开（所有人可见）<span class="text"></span>
@@ -114,6 +114,7 @@
 <script src="{{cdnjs "/static/jquery/1.12.4/jquery.min.js"}}" type="text/javascript"></script>
 <script src="{{cdnjs "/static/bootstrap/js/bootstrap.min.js"}}" type="text/javascript"></script>
 <script src="{{cdnjs "/static/js/jquery.form.js"}}" type="text/javascript"></script>
+<script src="{{cdnjs "/static/layer/layer.js"}}" type="text/javascript" ></script>
 <script src="{{cdnjs "/static/js/main.js"}}" type="text/javascript"></script>
 <script type="text/javascript">
     $(function () {
@@ -128,7 +129,11 @@
             },success : function ($res) {
                 if($res.errcode === 0) {
                     showSuccess("保存成功");
+                    layer.alert("保存成功")
                     $("#blogId").val($res.data.blog_id);
+                    setInterval(function (){
+                        window.location.href = {{.Referer}}
+                    },1500)
                 }else{
                     showError($res.message);
                 }

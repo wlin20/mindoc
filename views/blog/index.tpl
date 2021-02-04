@@ -78,8 +78,16 @@
         <div class="search-head" style="border-bottom-width: 1px;">
             <h1 class="header">
                {{.Model.BlogTitle}}
+
             </h1>
             <div class="blog-meta">
+                {{if eq .Model.BlogType 1 }}
+                    <div class="item">
+                        <a href='{{urlfor "DocumentController.Read" ":key" .Model.BookIdentify ":id" .Model.DocumentIdentify}}' title="打开原文地址">
+                            <div class="label horizontal blog-ui-link " data-tooltip="链">链</div>
+                        </a>
+                    </div>
+                {{end}}
                 <div class="item user_img"><img src="{{cdnimg .Model.MemberAvatar}}" align="{{.Model.CreateName}}"> </div>
                 <div class="item">&nbsp;{{.Model.CreateName}}</div>
                 <div class="item">发布于</div>
@@ -87,12 +95,13 @@
                 <div class="item">{{.Model.ModifyRealName}}</div>
                 <div class="item">修改于</div>
                 <div class="item">{{date .Model.Modified "Y-m-d H:i:s"}}</div>
-                {{if eq .Model.BlogType 1 }}
-                    <div class="item">[<a href='{{urlfor "DocumentController.Read" ":key" .Model.BookIdentify ":id" .Model.DocumentIdentify}}' title="打开链接地址">链接文章<i class="fa fa-link"></i> </a>]
-                </div>
-                {{end}}
-                {{if eq .Member.MemberId .Model.MemberId}}
+
+                {{if or (eq .Member.MemberId .Model.MemberId)  (eq $.Member.Role 0 1)}}
+                    {{if eq .Model.BlogType  1 }}
+                    <div class="item"><a href='{{urlfor "DocumentController.Read" ":key" .Model.BookIdentify ":id" .Model.DocumentIdentify}}' title="链接文章只支持在原文中编辑"><i class="fa fa-edit"></i>查看原文</a></div>
+                    {{else}}
                     <div class="item"><a href='{{urlfor "BlogController.ManageEdit" ":id" .Model.BlogId}}' title="文章编辑"><i class="fa fa-edit"></i> 编辑</a></div>
+                    {{end}}
                 {{end}}
             </div>
         </div>
