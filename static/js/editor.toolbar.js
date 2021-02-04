@@ -315,6 +315,8 @@ $(function () {
            $("#convertJsonToTableModal").modal("show");
        }  else if (name === "release") {
            window.editorTool.releaseBook()
+       }  else if (name === "help") {
+           window.location.href = "/docs/doc-guide/doc-guide-"+window.editor.type
        }  else if (name === "changeEditor") {
            window.editorTool.changeEditor()
        }  else if (name === "exitEditor") {
