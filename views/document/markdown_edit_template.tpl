@@ -449,8 +449,9 @@
 <script src="{{cdnjs "/static/layer/layer.js"}}" type="text/javascript" ></script>
 <script src="{{cdnjs "/static/js/jquery.form.js"}}" type="text/javascript"></script>
 <script src="{{cdnjs "/static/js/array.js" "version"}}" type="text/javascript"></script>
-<script src="{{cdnjs "/static/js/editor.js" "version"}}" type="text/javascript"></script>
-<script src="{{cdnjs "/static/js/markdown.js" "version"}}" type="text/javascript"></script>
+<script src="{{cdnjs "/static/js/editor.doctree.js" "version"}}" type="text/javascript"></script>
+<script src="{{cdnjs "/static/js/editor.toolbar.js" "version"}}" type="text/javascript"></script>
+<script src="{{cdnjs "/static/js/markdown.default.js" "version"}}" type="text/javascript"></script>
 <script type="text/javascript">
     $(function () {
         $("#attachInfo").on("click",function () {

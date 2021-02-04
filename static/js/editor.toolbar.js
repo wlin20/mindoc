@@ -1,15 +1,17 @@
 $(function () {
 
-    window.editorTool = {
+    function EditorToolbar(){}
+    EditorToolbar = window.editorTool = {
         editorTypes : {
-            markdown_vditor:"markdown.vditor",
-            markdown_default: "markdown",
-            html_default:"html"
+            markdown_vditor:"markdown.vditor"
+            ,markdown_default: "markdown.default"
+            // , html_default:"html" // 暂时不切换html
         },
-        wrapEditor: function (editor,initConfig,editorType,setValue,getMarkdown,getHTML){
+        wrapEditor: function (editor,initConfig,editorType,setValue,insertValue,getMarkdown,getHTML){
             editor.type = editorType
             editor.initConig = initConfig
             editor.setValue = setValue
+            editor.insertValue = insertValue
             editor.getMarkdown = getMarkdown             
             editor.getHTML = getHTML
             window.editor = editor
@@ -151,19 +153,22 @@ $(function () {
                 layer.msg("没有需要发布的文档")
             }
         },
+        /**
+         * 更换编辑器
+         */
         changeEditor : function(){
             if ($("#markdown-save").hasClass('change')) {
                 var confirm_result = confirm("编辑内容未保存，需要保存吗？");
                 if (confirm_result) {
                     this.saveDocument(false,this.changeEditor);
                 }
-                return
+                this.resetEditorChanged(false)
             }
 
             let types = Object.values(window.editorTool.editorTypes)
             let next = (types.indexOf(window.editor.type)+1) % types.length;
             console.info("next:"+next)
-            window.location.href = replaceParamVal(window,"editor",types[next],true);
+            window.location.href = this.replaceParamVal(window,"editor",types[next],true);
         },
         /**
          * 设置编辑器变更状态
@@ -177,44 +182,116 @@ $(function () {
             }
             window.isLoad = false;
         },
-    }
+        /**
+         * 替换指定传入参数的值
+         * win为某窗体,paramName为参数,paramValue为新值,forceAdding为不存在该参数时是否也指定
+         */
+        replaceParamVal : function (win,paramName,paramValue,forceAdding){
+            let search = win.location.search+'';
+            if(!search) {//没有任何查询参数,则直接附加
+                return ( forceAdding ? (win.location+'?'+paramName+'='+paramValue) : (win.location+'') );
+            }else{
+                let url = (win.location+'').split('?')[0];
+                let paramStrs = search.replace('?','').split('&');
+                let hasIn = false;
+                for(let i=0; i<paramStrs.length; i++) {
+                    let paramStr = paramStrs[i];
+                    if(paramStr.split('=')[0].toLowerCase() == paramName.toLowerCase()) {//指定参数
+                        url = url + (i==0 ? '?' : '&');
+                        hasIn = true;
 
-    //替换指定传入参数的值
-    //win为某窗体,paramName为参数,paramValue为新值,forceAdding为不存在该参数时是否也指定
-    function replaceParamVal(win,paramName,paramValue,forceAdding){
-        let search = win.location.search+'';
-        if(!search) {//没有任何查询参数,则直接附加
-            return ( forceAdding ? (win.location+'?'+paramName+'='+paramValue) : (win.location+'') );
-        }else{
-            let url = (win.location+'').split('?')[0];
-            let paramStrs = search.replace('?','').split('&');
-            let hasIn = false;
-            for(let i=0; i<paramStrs.length; i++) {
-                let paramStr = paramStrs[i];
-                if(paramStr.split('=')[0].toLowerCase() == paramName.toLowerCase()) {//指定参数
-                    url = url + (i==0 ? '?' : '&');
-                    hasIn = true;
-
-                    if(paramStr.indexOf('=') == -1) {//形式:"参数"
-                        url = url + paramStr + '=' + paramValue;
+                        if(paramStr.indexOf('=') == -1) {//形式:"参数"
+                            url = url + paramStr + '=' + paramValue;
+                        }
+                        else if (! paramStr.split('=')[1].length) {    //形式："参数="
+                            url = url + paramStr + paramValue;
+                        }
+                        else {//形式:"参数=值"
+                            url = url + paramName + '=' + paramValue;
+                        }
+                    }else {//其它参数
+                        url = url + (i==0 ? '?' : '&');
+                        url = url + paramStr;
                     }
-                    else if (! paramStr.split('=')[1].length) {    //形式："参数="
-                        url = url + paramStr + paramValue;
-                    }
-                    else {//形式:"参数=值"
-                        url = url + paramName + '=' + paramValue;
-                    }
-                }else {//其它参数
-                    url = url + (i==0 ? '?' : '&');
-                    url = url + paramStr;
                 }
+
+                if (!hasIn && forceAdding) {//不存在,但必须要添加时
+                    url = url + '&' + paramName + '=' + paramValue;
+                }
+
+                return url;
             }
 
-            if (!hasIn && forceAdding) {//不存在,但必须要添加时
-                url = url + '&' + paramName + '=' + paramValue;
-            }
+        },
+        exitEditor : function(){
+            let $selectedNodeId = window.sessionStorage.getItem("MinDoc::LastLoadDocument:" + window.book.identify);
+            window.location.href = window.data.docBaseUrl + "/" + $selectedNodeId
+        },
+        /** 粘贴上传图片 **/
+        uploadImage : function ($id, $callback) {
+            /** 粘贴上传图片 **/
+            document.getElementById($id).addEventListener('paste', function (e) {
+                if (e.clipboardData && e.clipboardData.items) {
+                    var clipboard = e.clipboardData;
+                    for (var i = 0, len = clipboard.items.length; i < len; i++) {
+                        if (clipboard.items[i].kind === 'file' || clipboard.items[i].type.indexOf('image') > -1) {
 
-            return url;
+                            var imageFile = clipboard.items[i].getAsFile();
+
+                            var fileName = String((new Date()).valueOf());
+
+                            switch (imageFile.type) {
+                                case "image/png" :
+                                    fileName += ".png";
+                                    break;
+                                case "image/jpg" :
+                                    fileName += ".jpg";
+                                    break;
+                                case "image/jpeg" :
+                                    fileName += ".jpeg";
+                                    break;
+                                case "image/gif" :
+                                    fileName += ".gif";
+                                    break;
+                                default :
+                                    layer.msg("不支持的图片格式");
+                                    return;
+                            }
+                            var form = new FormData();
+
+                            form.append('editormd-image-file', imageFile, fileName);
+
+                            var layerIndex = 0;
+
+                            $.ajax({
+                                url: window.imageUploadURL,
+                                type: "POST",
+                                dataType: "json",
+                                data: form,
+                                processData: false,
+                                contentType: false,
+                                beforeSend: function () {
+                                    layerIndex = $callback('before');
+                                },
+                                error: function () {
+                                    layer.close(layerIndex);
+                                    $callback('error');
+                                    layer.msg("图片上传失败");
+                                },
+                                success: function (data) {
+                                    layer.close(layerIndex);
+                                    $callback('success', data);
+                                    if (data.errcode !== 0) {
+                                        layer.msg(data.message);
+                                    }
+
+                                }
+                            });
+                            e.preventDefault();
+                        }
+                    }
+                }
+            });
         }
 
     }
@@ -240,6 +317,8 @@ $(function () {
            window.editorTool.releaseBook()
        }  else if (name === "changeEditor") {
            window.editorTool.changeEditor()
+       }  else if (name === "exitEditor") {
+           window.editorTool.exitEditor()
        } else if (name === "sidebar") {
            $("#manualCategory").toggle(0, "swing", function () {
                let $then = $("#manualEditorContainer");
@@ -255,7 +334,7 @@ $(function () {
                }
            });
        } else if (name === "tasks") {
-           if(window.editor.type == window.editor.types.markdown_default) {
+           if(window.editor.type == window.editorTool.editorTypes.markdown_default) {
                // 插入 GFM 任务列表
                var cm = window.editor.cm;
                var selection = cm.getSelection();
@@ -286,9 +365,6 @@ $(function () {
    }) ;
 
 
-
-
-
     /**
      * 当离开窗口时存在未保存的文档会提示保存
      */
@@ -316,6 +392,7 @@ $(function () {
         }
         $("#documentTemplateModal").modal('hide');
     });
+
     /**
      * 展示自定义模板列表
      */
@@ -456,6 +533,10 @@ $(function () {
        }
        $("#convertJsonToTableModal").modal("hide");
     });
+
+    /**
+     * 转换Json 到表格
+     */
     $("#convertJsonToTableModal").on("hidden.bs.modal",function () {
         $("#jsonContent").val("");
     }).on("shown.bs.modal",function () {
@@ -573,7 +654,7 @@ $(function () {
     window.attachVueApp = new Vue({
         el: "#attachList",
         data: {
-            lists: window.data.attachList
+            lists: []
         },
         delimiters: ['${', '}'],
         methods: {
@@ -652,71 +733,6 @@ $(function () {
     });
 
 
-    function uploadImage($id, $callback) {
-        /** 粘贴上传图片 **/
-        document.getElementById($id).addEventListener('paste', function (e) {
-            if (e.clipboardData && e.clipboardData.items) {
-                var clipboard = e.clipboardData;
-                for (var i = 0, len = clipboard.items.length; i < len; i++) {
-                    if (clipboard.items[i].kind === 'file' || clipboard.items[i].type.indexOf('image') > -1) {
-
-                        var imageFile = clipboard.items[i].getAsFile();
-
-                        var fileName = String((new Date()).valueOf());
-
-                        switch (imageFile.type) {
-                            case "image/png" :
-                                fileName += ".png";
-                                break;
-                            case "image/jpg" :
-                                fileName += ".jpg";
-                                break;
-                            case "image/jpeg" :
-                                fileName += ".jpeg";
-                                break;
-                            case "image/gif" :
-                                fileName += ".gif";
-                                break;
-                            default :
-                                layer.msg("不支持的图片格式");
-                                return;
-                        }
-                        var form = new FormData();
-
-                        form.append('editormd-image-file', imageFile, fileName);
-
-                        var layerIndex = 0;
-
-                        $.ajax({
-                            url: window.imageUploadURL,
-                            type: "POST",
-                            dataType: "json",
-                            data: form,
-                            processData: false,
-                            contentType: false,
-                            beforeSend: function () {
-                                layerIndex = $callback('before');
-                            },
-                            error: function () {
-                                layer.close(layerIndex);
-                                $callback('error');
-                                layer.msg("图片上传失败");
-                            },
-                            success: function (data) {
-                                layer.close(layerIndex);
-                                $callback('success', data);
-                                if (data.errcode !== 0) {
-                                    layer.msg(data.message);
-                                }
-
-                            }
-                        });
-                        e.preventDefault();
-                    }
-                }
-            }
-        });
-    }
 
     /**
      * 初始化代码高亮
@@ -726,6 +742,11 @@ $(function () {
             hljs.highlightBlock(block);
         });
     }
+
+    // 添加默认工具
+    $("#editormd-tools").append(
+        '<div class="editormd-group pull-right">\n            <a href="javascript:;" data-toggle="tooltip" data-title="退出编辑模式"><i class="fa fa-sign-out" aria-hidden="true" name="exitEditor"></i></a>\n        </div>\n\n    <div class="editormd-group pull-right">\n        <a href="javascript:;" data-toggle="tooltip" data-title="附件"><i class="fa fa-paperclip first" aria-hidden="true" name="attachment"></i></a>\n        <a href="javascript:;" data-toggle="tooltip" data-title="Json转换为表格"><i class="fa fa-wrench item" aria-hidden="true" name="json"></i></a>\n        <a href="javascript:;" data-toggle="tooltip" data-title="模板"><i class="fa fa-tachometer last" name="template"></i></a>\n    </div>\n\n    <div class="editormd-group pull-right">\n        <a href="javascript:;" data-toggle="tooltip" data-title="修改历史"><i class="fa fa-history item" name="history" aria-hidden="true"></i></a>\n        <a href="javascript:;" data-toggle="tooltip" data-title="边栏"><i class="fa fa-columns item" aria-hidden="true" name="sidebar"></i></a>\n        <a href="javascript:;" data-toggle="tooltip" data-title="使用帮助"><i class="fa fa-question-circle-o last" aria-hidden="true" name="help"></i></a>\n    </div>\n\n    <div class="editormd-group pull-right">\n        <a href="javascript:;" data-toggle="tooltip" data-title="发布"><i class="fa fa-cloud-upload" name="release" aria-hidden="true"></i></a>\n    </div>\n    <div class="editormd-group pull-right">\n        <a href="javascript:;" id="markdown-save" data-toggle="tooltip" data-title="保存" class="disabled save"><i class="fa fa-save first" aria-hidden="true" name="save"></i></a>\n        <a href="javascript:;" id="markdown-template" data-toggle="tooltip" data-title="保存为模板" class="template"><i class="fa fa-briefcase last" aria-hidden="true" name="save-template"></i></a>\n    </div>\n\n\n\n    <div class="editormd-group pull-right">\n        <a href="javascript:;" data-toggle="tooltip" data-title="切换编辑器"><i class="fa fa-exchange" name="changeEditor" aria-hidden="true"></i></a>\n    </div>'
+    );
 
 
 

@@ -324,7 +324,7 @@ $(function (){
                 pushDocumentCategory(node);
                 window.selectNode = node;
                 window.attachVueApp.lists = res.data.attach;
-                window.data.attachList = res.data.attach;
+                // window.data.attachList = res.data.attach;
                 // pushVueLists(res.data.attach);
                 setLastSelectNode($node);
             } else {
