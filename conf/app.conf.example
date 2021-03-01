@@ -97,6 +97,8 @@ form_user_name="${MINDOC_FORM_USERNAME||admin@iminho.me}"
 mail_expired="${MINDOC_EXPIRED||30}"
 #加密类型NONE 无认证、SSL 加密、LOGIN 普通用户登录
 secure="${MINDOC_MAIL_SECURE||LOGIN}"
+#注册时支持的邮箱地址，多个用逗号分隔，比如 @gmail.com,@qq.com
+mail_register_support="${MINDOC_MAIL_REGISTER_SUPPORT||@qq.com}"
 
 ###############配置导出项目###################
 enable_export="${MINDOC_ENABLE_EXPORT||false}"

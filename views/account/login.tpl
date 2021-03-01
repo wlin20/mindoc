@@ -73,7 +73,7 @@
                 {{if .ENABLED_REGISTER}}
                 {{if ne .ENABLED_REGISTER "false"}}
                 <div class="form-group">
-                    还没有账号？<a href="{{urlfor "AccountController.Register" }}" title="立即注册">立即注册</a>
+                    还没有账号？<a href="{{urlfor "AccountController.RegisterWithToken" }}" title="立即注册">立即注册</a>
                 </div>
                 {{end}}
                 {{end}}

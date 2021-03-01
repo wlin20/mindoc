@@ -202,10 +202,225 @@ func (c *AccountController) Register() {
 		member.Email = email
 		member.Status = 0
 		if err := member.Add(); err != nil {
-			c.JsonResult(6006, "注册失败，请联系系统管理员处理")
+			beego.Error(err)
+			c.JsonResult(6006, "注册失败，请联系系统管理员处理"+err.Error())
 		}
 
 		c.JsonResult(0, "ok", member)
+	}
+}
+
+// 注册1：校验邮箱发送注册链接
+func (c *AccountController) RegisterWithToken() {
+	mailConf := conf.GetMailConfig()
+
+	if c.Ctx.Input.IsPost() { // 如果是POST发送验证码邮件
+		email := c.GetString("email")
+
+		if email == "" {
+			c.JsonResult(6005, "邮箱地址不能为空")
+		}
+		// 判断当前邮箱地址是否支持注册
+		supportedMailAddress := strings.Split(mailConf.MailSupport, ",")
+		supportedRegister := false
+		for _, address := range supportedMailAddress {
+			supportedRegister = supportedRegister || strings.Contains(email, address)
+			if supportedRegister {
+				break
+			}
+		}
+		if !supportedRegister {
+			c.JsonResult(6005, "当前邮箱地址不支持注册！请使用["+mailConf.MailSupport+"]邮箱注册")
+		}
+
+		if !mailConf.EnableMail {
+			c.JsonResult(6004, "未启用邮件服务")
+		}
+
+		_, err := models.NewMember().FindByFieldFirst("email", email)
+		if err == nil {
+			c.JsonResult(6006, "邮箱已被注册，如非本人注册请联系管理员")
+		}
+
+		count, err := models.NewMemberToken().FindSendCount(email, time.Now().Add(-1*time.Hour), time.Now())
+
+		if err != nil {
+			beego.Error(err)
+			c.JsonResult(6008, "发送邮件失败")
+		}
+		if count > mailConf.MailNumber {
+			c.JsonResult(6008, "发送次数太多，请稍候再试")
+		}
+
+		//统计两分钟内同个邮箱地址的注册邮件发送次数，限制频繁操作（3分钟内不能发送超过2次）
+		nowTime := time.Now()
+		sendCount, err := models.NewMemberToken().FindSendCount(email, nowTime.Add(-time.Minute*3), nowTime)
+		if err != nil {
+			c.JsonResult(6009, "邮件发送失败,统计次数失败！")
+		}
+		if sendCount > 2 {
+			c.JsonResult(6009, "操作过于频繁, 请稍后再试！")
+		}
+
+		//生成注册操作邮件
+		memberToken := models.NewMemberToken()
+		memberToken.Token = string(utils.Krand(32, utils.KC_RAND_KIND_ALL))
+		memberToken.Email = email
+		memberToken.MemberId = -1 // -1 用作注册新用户
+		memberToken.IsValid = false
+		if _, err := memberToken.InsertOrUpdate(); err != nil {
+			c.JsonResult(6009, "邮件发送失败")
+		}
+
+		data := map[string]interface{}{
+			"SITE_NAME": c.Option["SITE_NAME"],
+			"url":       conf.URLFor("AccountController.RegisterWithToken", "token", memberToken.Token, "mail", email),
+			"BaseUrl":   c.BaseUrl(),
+		}
+
+		body, err := c.ExecuteViewPathTemplate("account/register_mail_template.tpl", data)
+		if err != nil {
+			beego.Error(err)
+			c.JsonResult(6003, "邮件发送失败")
+		}
+
+		go func(mailConf *conf.SmtpConf, email string, body string) {
+			if e := mail.SendUseGoMail(mailConf, email, "注册用户", body); e != nil {
+				beego.Error("发送邮件失败：" + e.Error())
+			} else {
+				beego.Info("注册邮件发送成功：" + email)
+			}
+		}(mailConf, email, body)
+
+		c.JsonResult(0, "ok", conf.URLFor("AccountController.Login"))
+	}
+	// 如果不是POST ,验证是否有token 和mail
+	token := c.GetString("token")
+	email := c.GetString("mail")
+
+	if token != "" && email != "" { // 有token 和mail ,跳转到注册页面2
+		memberToken, err := models.NewMemberToken().FindByFieldFirst("token", token)
+
+		if err != nil {
+			beego.Error(err)
+			c.Data["ErrorCode"] = 200
+			c.Data["ErrorMessage"] = "邮件已失效"
+			c.TplName = "errors/error.tpl"
+			return
+		}
+		subTime := memberToken.SendTime.Sub(time.Now())
+
+		if !strings.EqualFold(memberToken.Email, email) || subTime.Minutes() > float64(mailConf.MailExpired) || !memberToken.ValidTime.IsZero() {
+			c.Data["ErrorCode"] = 200
+			c.Data["ErrorMessage"] = "验证码已过期，请重新操作。"
+			c.TplName = "errors/error.tpl"
+			return
+		}
+		c.Data["Email"] = memberToken.Email
+		c.Data["Token"] = memberToken.Token
+		c.TplName = "account/register_step2.tpl"
+		return
+	}
+
+	c.TplName = "account/register_step1.tpl" // 没有toekn 和mail ,跳转到注册页面1
+}
+
+// 注册2：校验并创建用户
+func (c *AccountController) RegisterWithTokenSubmit() {
+
+	c.TplName = "account/register_step1.tpl"
+
+	//如果用户登录了，则跳转到网站首页
+	if member, ok := c.GetSession(conf.LoginSessionName).(models.Member); ok && member.MemberId > 0 {
+		c.Redirect(conf.URLFor("HomeController.Index"), 302)
+	}
+	// 如果没有开启用户注册
+	if v, ok := c.Option["ENABLED_REGISTER"]; ok && !strings.EqualFold(v, "true") {
+		c.Abort("404")
+	}
+
+	if c.Ctx.Input.IsPost() {
+
+		c.Prepare()
+		account := c.GetString("account")
+		password1 := c.GetString("password1")
+		password2 := c.GetString("password2")
+		captcha := c.GetString("code")
+		token := c.GetString("token")
+		email := c.GetString("email")
+
+		if password1 == "" {
+			c.JsonResult(6001, "密码不能为空")
+		}
+		if l := strings.Count(password1, ""); l < 6 || l > 50 {
+			c.JsonResult(6001, "密码不能为空且必须在6-50个字符之间")
+		}
+		if password2 == "" {
+			c.JsonResult(6002, "确认密码不能为空")
+		}
+		if password1 != password2 {
+			c.JsonResult(6003, "确认密码输入不正确")
+		}
+		if captcha == "" {
+			c.JsonResult(6004, "验证码不能为空")
+		}
+		v, ok := c.GetSession(conf.CaptchaSessionName).(string)
+		if !ok || !strings.EqualFold(v, captcha) {
+			c.JsonResult(6001, "验证码不正确")
+		}
+
+		mailConf := conf.GetMailConfig()
+		memberToken, err := models.NewMemberToken().FindByFieldFirst("token", token)
+
+		if err != nil {
+			beego.Error(err)
+			c.JsonResult(6007, "邮件已失效")
+		}
+		subTime := time.Now().Sub(memberToken.SendTime)
+
+		if !strings.EqualFold(memberToken.Email, email) || subTime.Minutes() > float64(mailConf.MailExpired) || !memberToken.ValidTime.IsZero() {
+			c.JsonResult(6008, "验证码已过期，请重新操作。")
+		}
+
+		// stsrt
+
+		if ok, err := regexp.MatchString(conf.RegexpAccount, account); account == "" || !ok || err != nil {
+			c.JsonResult(6001, "账号只能由英文字母数字组成，且在3-50个字符")
+		}
+		if l := strings.Count(password1, ""); password1 == "" || l > 30 || l < 6 {
+			c.JsonResult(6002, "密码必须在6-30个字符之间")
+		}
+		if password1 != password2 {
+			c.JsonResult(6003, "确认密码不正确")
+		}
+		if ok, err := regexp.MatchString(conf.RegexpEmail, email); !ok || err != nil || email == "" {
+			c.JsonResult(6004, "邮箱格式不正确")
+		}
+
+		member := models.NewMember()
+
+		if _, err := member.FindByAccount(account); err == nil && member.MemberId > 0 {
+			c.JsonResult(6005, "账号已存在")
+		}
+
+		member.Account = account
+		member.Password = password1
+		member.Role = conf.MemberGeneralRole
+		member.Avatar = conf.GetDefaultAvatar()
+		member.CreateAt = 0
+		member.Email = email
+		member.Status = 0
+
+		memberToken.ValidTime = time.Now()
+		memberToken.IsValid = true
+		memberToken.InsertOrUpdate()
+
+		if err := member.Add(); err != nil {
+			beego.Error(err)
+			c.JsonResult(6006, "注册失败，请联系系统管理员处理"+err.Error())
+		}
+		c.JsonResult(0, "ok", member)
+		//end
 	}
 }
 
@@ -279,51 +494,60 @@ func (c *AccountController) FindPassword() {
 
 		go func(mailConf *conf.SmtpConf, email string, body string) {
 
-			mailConfig := &mail.SMTPConfig{
-				Username: mailConf.SmtpUserName,
-				Password: mailConf.SmtpPassword,
-				Host:     mailConf.SmtpHost,
-				Port:     mailConf.SmtpPort,
-				Secure:   mailConf.Secure,
-				Identity: "",
-			}
-			beego.Info(mailConfig)
-
-			c := mail.NewSMTPClient(mailConfig)
-			m := mail.NewMail()
-
-			m.AddFrom(mailConf.FormUserName)
-			m.AddFromName(mailConf.FormUserName)
-			m.AddSubject("找回密码")
-			m.AddHTML(body)
-			m.AddTo(email)
-
-			if e := c.Send(m); e != nil {
+			if e := mail.SendUseGoMail(mailConf, email, "找回密码", body); e != nil {
 				beego.Error("发送邮件失败：" + e.Error())
 			} else {
 				beego.Info("邮件发送成功：" + email)
 			}
-			//auth := smtp.PlainAuth(
-			//	"",
-			//	mail_conf.SmtpUserName,
-			//	mail_conf.SmtpPassword,
-			//	mail_conf.SmtpHost,
-			//)
-			//
-			//mime := "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"
-			//subject := "Subject: 找回密码!\n"
-			//
-			//err = smtp.SendMail(
-			//	mail_conf.SmtpHost+":"+strconv.Itoa(mail_conf.SmtpPort),
-			//	auth,
-			//	mail_conf.FormUserName,
-			//	[]string{email},
-			//	[]byte(subject+mime+"\n"+body),
-			//)
-			//if err != nil {
-			//	beego.Error("邮件发送失败 => ", email, err)
-			//}
 		}(mailConf, email, body)
+
+		//go func(mailConf *conf.SmtpConf, email string, body string) {
+		//
+		//	mailConfig := &mail.SMTPConfig{
+		//		Username: mailConf.SmtpUserName,
+		//		Password: mailConf.SmtpPassword,
+		//		Host:     mailConf.SmtpHost,
+		//		Port:     mailConf.SmtpPort,
+		//		Secure:   mailConf.Secure,
+		//		Identity: "",
+		//	}
+		//	beego.Info(mailConfig)
+		//
+		//	c := mail.NewSMTPClient(mailConfig)
+		//	m := mail.NewMail()
+		//
+		//	m.AddFrom(mailConf.FormUserName)
+		//	m.AddFromName(mailConf.FormUserName)
+		//	m.AddSubject("找回密码")
+		//	m.AddHTML(body)
+		//	m.AddTo(email)
+		//
+		//	if e := c.Send(m); e != nil {
+		//		beego.Error("发送邮件失败：" + e.Error())
+		//	} else {
+		//		beego.Info("邮件发送成功：" + email)
+		//	}
+		//	//auth := smtp.PlainAuth(
+		//	//	"",
+		//	//	mail_conf.SmtpUserName,
+		//	//	mail_conf.SmtpPassword,
+		//	//	mail_conf.SmtpHost,
+		//	//)
+		//	//
+		//	//mime := "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"
+		//	//subject := "Subject: 找回密码!\n"
+		//	//
+		//	//err = smtp.SendMail(
+		//	//	mail_conf.SmtpHost+":"+strconv.Itoa(mail_conf.SmtpPort),
+		//	//	auth,
+		//	//	mail_conf.FormUserName,
+		//	//	[]string{email},
+		//	//	[]byte(subject+mime+"\n"+body),
+		//	//)
+		//	//if err != nil {
+		//	//	beego.Error("邮件发送失败 => ", email, err)
+		//	//}
+		//}(mailConf, email, body)
 
 		c.JsonResult(0, "ok", conf.URLFor("AccountController.Login"))
 	}

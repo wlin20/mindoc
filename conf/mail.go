@@ -14,7 +14,8 @@ type SmtpConf struct {
 	SmtpPort     int
 	FormUserName string
 	MailExpired  int
-	Secure	string
+	MailSupport  string
+	Secure       string
 }
 
 func GetMailConfig() *SmtpConf {
@@ -25,7 +26,9 @@ func GetMailConfig() *SmtpConf {
 	form_user_name := beego.AppConfig.String("form_user_name")
 	enable_mail := beego.AppConfig.String("enable_mail")
 	mail_number := beego.AppConfig.DefaultInt("mail_number", 5)
-	secure := beego.AppConfig.DefaultString("secure","NONE")
+	mail_expired := beego.AppConfig.DefaultInt("mail_expired", 5)
+	mail_register_support := beego.AppConfig.String("mail_register_support")
+	secure := beego.AppConfig.DefaultString("secure", "NONE")
 
 	if secure != "NONE" && secure != "LOGIN" && secure != "SSL" {
 		secure = "NONE"
@@ -38,7 +41,9 @@ func GetMailConfig() *SmtpConf {
 		SmtpPassword: password,
 		FormUserName: form_user_name,
 		SmtpPort:     smtp_port,
-		Secure:secure,
+		Secure:       secure,
+		MailExpired:  mail_expired,
+		MailSupport:  mail_register_support,
 	}
 	return c
 }
