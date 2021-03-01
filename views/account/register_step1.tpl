@@ -115,6 +115,7 @@
                 }else{
                     alert("注册邮件发送成功，请登录邮箱查看（请耐心等待邮件发送，请勿频繁操作）")
                     // $("#btnSendMail").button('reset');
+                    $("#btnSendMail").html('请查收邮件完成操作');
                     // window.location = res.data;
                 }
             },
