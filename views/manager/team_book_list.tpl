@@ -23,7 +23,7 @@
             <div class="page-right">
                 <div class="m-box">
                     <div class="box-head">
-                        <strong class="box-title">{{.Model.TeamName}} - 团队项目</strong>
+                        <strong class="box-title">{{.Model.TeamName}} - 团队文库</strong>
                         <button type="button"  class="btn btn-success btn-sm pull-right" data-toggle="modal" data-target="#addTeamBookDialogModal"><i class="fa fa-book" aria-hidden="true"></i> 添加项目</button>
                     </div>
                 </div>
