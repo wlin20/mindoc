@@ -32,8 +32,8 @@
                         <table class="table">
                             <thead>
                             <tr>
-                                <th>项目名称</th>
-                                <th>项目作者</th>
+                                <th>文库名称</th>
+                                <th>文库作者</th>
                                 <th>加入时间</th>
                                 <th>操作</th>
                             </tr>
