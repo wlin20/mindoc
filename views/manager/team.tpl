@@ -218,27 +218,29 @@
             delimiters: ['${', '}'],
             methods: {
                 deleteTeam: function (id, e) {
-                    var $this = this;
-                    $.ajax({
-                        url: "{{urlfor "ManagerController.TeamDelete"}}",
-                        type: "post",
-                        data: {"teamId": id},
-                        dataType: "json",
-                        success: function (res) {
-                            if (res.errcode === 0) {
+                    if(confirm("确定删除该团队吗?")){
+                        var $this = this;
+                        $.ajax({
+                            url: "{{urlfor "ManagerController.TeamDelete"}}",
+                            type: "post",
+                            data: {"teamId": id},
+                            dataType: "json",
+                            success: function (res) {
+                                if (res.errcode === 0) {
 
-                                for (var index in $this.lists) {
-                                    var item = $this.lists[index];
-                                    if (item.team_id == id) {
-                                        $this.lists.splice(index, 1);
-                                        break;
+                                    for (var index in $this.lists) {
+                                        var item = $this.lists[index];
+                                        if (item.team_id == id) {
+                                            $this.lists.splice(index, 1);
+                                            break;
+                                        }
                                     }
+                                } else {
+                                    alert("操作失败：" + res.message);
                                 }
-                            } else {
-                                alert("操作失败：" + res.message);
                             }
-                        }
-                    });
+                        });
+                    }
                 },
                 editTeam : function (id, e) {
                     var $this = this;

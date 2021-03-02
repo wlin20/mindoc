@@ -210,27 +210,29 @@
                     })
                 },
                 deleteMember : function (id, e) {
-                    var $this = this;
-                    $.ajax({
-                        url : "{{urlfor "ManagerController.TeamMemberDelete"}}",
-                        type : "post",
-                        data : { "memberId":id ,"teamId":{{.Model.TeamId}}},
-                        dataType : "json",
-                        success : function (res) {
-                            if (res.errcode === 0) {
+                    if(confirm("确定删除该成员吗?")){
+                        var $this = this;
+                        $.ajax({
+                            url : "{{urlfor "ManagerController.TeamMemberDelete"}}",
+                            type : "post",
+                            data : { "memberId":id ,"teamId":{{.Model.TeamId}}},
+                            dataType : "json",
+                            success : function (res) {
+                                if (res.errcode === 0) {
 
-                                for (var index in $this.lists) {
-                                    var item = $this.lists[index];
-                                    if (item.member_id == id) {
-                                        $this.lists.splice(index,1);
-                                        break;
+                                    for (var index in $this.lists) {
+                                        var item = $this.lists[index];
+                                        if (item.member_id == id) {
+                                            $this.lists.splice(index,1);
+                                            break;
+                                        }
                                     }
+                                } else {
+                                    alert("操作失败：" + res.message);
                                 }
-                            } else {
-                                alert("操作失败：" + res.message);
                             }
-                        }
-                    });
+                        });
+                    }
                 }
             }
         });

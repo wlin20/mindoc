@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>团队 - {{.Model.BookName}} - Powered by MinDoc</title>
+    <title>团队 - {{.Model.BookName}} </title>
 
     <!-- Bootstrap -->
     <link href="{{cdncss "/static/bootstrap/css/bootstrap.min.css"}}" rel="stylesheet">
@@ -190,26 +190,28 @@
             delimiters: ['${', '}'],
             methods: {
                 deleteTeam: function (id, e) {
-                    var $this = this;
-                    $.ajax({
-                        url: "{{urlfor "BookController.TeamDelete"}}",
-                        type: "post",
-                        data: {"teamId": id, "identify": "{{.Model.Identify}}"},
-                        dataType: "json",
-                        success: function ($res) {
-                            if ($res.errcode === 0) {
-                                for (var index in $this.lists) {
-                                    var item = $this.lists[index];
-                                    if (item.team_relationship_id == id) {
-                                        $this.lists.splice(index, 1);
-                                        break;
+                    if (confirm("确定删除该团队吗?")) {
+                        var $this = this;
+                        $.ajax({
+                            url: "{{urlfor "BookController.TeamDelete"}}",
+                            type: "post",
+                            data: {"teamId": id, "identify": "{{.Model.Identify}}"},
+                            dataType: "json",
+                            success: function ($res) {
+                                if ($res.errcode === 0) {
+                                    for (var index in $this.lists) {
+                                        var item = $this.lists[index];
+                                        if (item.team_relationship_id == id) {
+                                            $this.lists.splice(index, 1);
+                                            break;
+                                        }
                                     }
+                                } else {
+                                    alert("操作失败：" + res.message);
                                 }
-                            } else {
-                                alert("操作失败：" + res.message);
                             }
-                        }
-                    });
+                        });
+                    }
                 }
             }
         });

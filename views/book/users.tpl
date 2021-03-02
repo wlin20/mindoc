@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>成员 - Powered by MinDoc</title>
+    <title>文库成员 </title>
 
     <!-- Bootstrap -->
     <link href="{{cdncss "/static/bootstrap/css/bootstrap.min.css"}}" rel="stylesheet">
@@ -233,25 +233,27 @@
                     });
                 },
                 removeBookMember : function (member_id) {
-                    var $this = this;
-                    $.ajax({
-                        url : "{{urlfor "BookMemberController.RemoveMember"}}",
-                        type :"post",
-                        dataType :"json",
-                        data :{ "identify" : $this.book.identify,"member_id" : member_id},
-                        success : function (res) {
-                            if(res.errcode === 0){
-                                for(var index in $this.lists){
-                                    if($this.lists[index].member_id === member_id){
-                                        $this.lists.splice(index,1);
-                                        break;
+                    if(confirm("确定删除该成员吗?")) {
+                        var $this = this;
+                        $.ajax({
+                            url: "{{urlfor "BookMemberController.RemoveMember"}}",
+                            type: "post",
+                            dataType: "json",
+                            data: {"identify": $this.book.identify, "member_id": member_id},
+                            success: function (res) {
+                                if (res.errcode === 0) {
+                                    for (var index in $this.lists) {
+                                        if ($this.lists[index].member_id === member_id) {
+                                            $this.lists.splice(index, 1);
+                                            break;
+                                        }
                                     }
+                                } else {
+                                    alert(res.message);
                                 }
-                            }else{
-                                alert(res.message);
                             }
-                        }
-                    });
+                        });
+                    }
                 }
             }
         });
