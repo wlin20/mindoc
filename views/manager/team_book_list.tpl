@@ -159,29 +159,31 @@
             delimiters: ['${', '}'],
             methods: {
                 deleteTeamBook: function ($id, $e) {
-                    var $this = this;
-                    $.ajax({
-                        url : "{{urlfor "ManagerController.TeamBookDelete"}}",
-                        data : { "teamRelId" : $id },
-                        type : "post",
-                        dataType : "json",
-                        success : function ($res) {
-                            if($res.errcode === 0){
-                                for (var index in $this.lists) {
-                                    var item = $this.lists[index];
-                                    if (item.team_relationship_id == $id) {
-                                        $this.lists.splice(index,1);
-                                        break;
+                    if (confirm("确定删除该文库吗?")) {
+                        var $this = this;
+                        $.ajax({
+                            url: "{{urlfor "ManagerController.TeamBookDelete"}}",
+                            data: {"teamRelId": $id},
+                            type: "post",
+                            dataType: "json",
+                            success: function ($res) {
+                                if ($res.errcode === 0) {
+                                    for (var index in $this.lists) {
+                                        var item = $this.lists[index];
+                                        if (item.team_relationship_id == $id) {
+                                            $this.lists.splice(index, 1);
+                                            break;
+                                        }
                                     }
+                                } else {
+                                    layer.msg(res.message);
                                 }
-                            }else {
-                                layer.msg(res.message);
+                            },
+                            error: function () {
+                                layer.msg("服务器异常");
                             }
-                        },
-                        error : function () {
-                            layer.msg("服务器异常");
-                        }
-                    });
+                        });
+                    }
                 }
             }
         });
