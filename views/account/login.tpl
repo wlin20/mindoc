@@ -65,6 +65,10 @@
                     <label>
                         <input type="checkbox" name="is_remember" value="yes"> 保持登录
                     </label>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    <label>
+                        <input type="checkbox" name="is_third_login" value="yes" {{if .config.Open }}checked{{end}}> 使用{{.config.Name}}登录
+                    </label>
                     <a href="{{urlfor "AccountController.FindPassword" }}" style="display: inline-block;float: right">忘记密码？</a>
                 </div>
                 <div class="form-group">

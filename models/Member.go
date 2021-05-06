@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/lifei6671/mindoc/services"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -102,6 +103,54 @@ func (m *Member) Login(account string, password string) (*Member, error) {
 	}
 
 	return member, ErrorMemberPasswordError
+}
+
+// third auth login
+func (this *Member) ThirdLogin(username string, password string) (*Member, error) {
+	// get auth login config
+	if username == "" {
+		return nil, fmt.Errorf("统一登录用户名不能为空！")
+	}
+	if password == "" {
+		return nil, fmt.Errorf("统一登录密码不能为空！")
+	}
+	authLoginRes, err := services.AuthLogin.AuthLogin(username, password)
+	if err != nil || authLoginRes == nil {
+		return nil, fmt.Errorf("统一登录失败！")
+	}
+
+	realUsername := conf.GetThirdLoginConfig().Prefix + "-" + username
+	//passwordEncode := models.UserModel.EncodePassword(password)
+	passwordEncode := password
+	userValue := map[string]interface{}{
+		"account":    realUsername,
+		"real_name":  authLoginRes.GivenName,
+		"password":   passwordEncode,
+		"email":      authLoginRes.Email,
+		"mobile":     authLoginRes.Mobile,
+		"phone":      authLoginRes.Phone,
+		"department": authLoginRes.Department,
+		"position":   authLoginRes.Position,
+		"location":   authLoginRes.Location,
+		"im":         authLoginRes.Im,
+		"last_time":  time.Now().Unix(),
+		//"last_ip":    this.GetClientIp(),
+	}
+
+	has, err := this.HasAccount(realUsername)
+	if err != nil {
+		return nil, err
+	}
+
+	if has {
+		// update user info
+		_, err = this.UpdateUserByUsername(userValue)
+		return this, err
+	} else {
+		this.AuthMethod = "third-auth-" + conf.GetThirdLoginConfig().Name
+		_, err = this.InsertAccount(userValue["account"].(string), userValue["password"].(string), userValue["email"].(string))
+	}
+	return this, err
 }
 
 //ldapLogin 通过LDAP登陆
@@ -327,6 +376,68 @@ func (m *Member) FindByAccount(account string) (*Member, error) {
 		m.ResolveRoleName()
 	}
 	return m, err
+}
+
+//根据账号查找用户.
+func (m *Member) CountByAccount(account string) (int64, error) {
+	o := orm.NewOrm()
+
+	num, err := o.QueryTable(m.TableNameWithPrefix()).Filter("account", account).Count()
+	return num, err
+}
+
+// 用户是否存在
+func (this *Member) HasAccount(username string) (bool, error) {
+	if num, err := this.CountByAccount(username); err != nil || num == 0 {
+		return false, err
+	}
+	return true, nil
+}
+
+// update user by username
+func (this *Member) UpdateUserByUsername(user map[string]interface{}) (affect int64, err error) {
+
+	_, err = this.FindByAccount(user["account"].(string))
+	if err != nil {
+		return 0, err
+	}
+
+	this.Email = user["email"].(string)
+	this.RealName = user["real_name"].(string)
+
+	this.Update("email", "real_name")
+	return
+}
+
+// 新增用户
+func (this *Member) InsertAccount(account string, password string, email string) (int, error) {
+	this.newMemberModel(account, password, email)
+	if has, err := this.HasAccount(account); has {
+		return 6005, fmt.Errorf("账号已存在：%s", err.Error())
+	}
+
+	if err := this.Add(); err != nil {
+		return 6006, fmt.Errorf("账号异常：%s", err.Error())
+	}
+	o := orm.NewOrm()
+
+	err := o.QueryTable(this.TableNameWithPrefix()).Filter("account", this.Account).One(this)
+
+	if err == nil {
+		this.ResolveRoleName()
+	}
+	return 0, err
+}
+
+func (this *Member) newMemberModel(account string, password string, email string) *Member {
+	this.Account = account
+	this.Password = password
+	this.Role = conf.MemberGeneralRole
+	this.Avatar = conf.GetDefaultAvatar()
+	this.CreateAt = 0
+	this.Email = email
+	this.Status = 0
+	return this
 }
 
 //批量查询用户

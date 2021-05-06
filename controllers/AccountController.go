@@ -91,6 +91,7 @@ func (c *AccountController) Login() {
 		password := c.GetString("password")
 		captcha := c.GetString("code")
 		isRemember := c.GetString("is_remember")
+		isThirdLogin := c.GetString("is_third_login")
 
 		// 如果开启了验证码
 		if v, ok := c.Option["ENABLED_CAPTCHA"]; ok && strings.EqualFold(v, "true") {
@@ -104,7 +105,14 @@ func (c *AccountController) Login() {
 			c.JsonResult(6002, "账号或密码不能为空")
 		}
 
-		member, err := models.NewMember().Login(account, password)
+		member := models.NewMember()
+		var err error
+		if strings.EqualFold(isThirdLogin, "yes") {
+			member, err = member.ThirdLogin(account, password)
+		} else {
+			member, err = member.Login(account, password)
+		}
+
 		if err == nil {
 			member.LastLoginTime = time.Now()
 			_ = member.Update("last_login_time")
@@ -124,10 +132,11 @@ func (c *AccountController) Login() {
 			c.JsonResult(0, "ok", c.referer())
 		} else {
 			beego.Error("用户登录 ->", err)
-			c.JsonResult(500, "账号或密码错误", nil)
+			c.JsonResult(500, "登录失败："+err.Error(), nil)
 		}
 	} else {
 		c.Data["url"] = c.referer()
+		c.Data["config"] = conf.GetThirdLoginConfig()
 	}
 }
 
@@ -189,21 +198,9 @@ func (c *AccountController) Register() {
 		}
 
 		member := models.NewMember()
-
-		if _, err := member.FindByAccount(account); err == nil && member.MemberId > 0 {
-			c.JsonResult(6005, "账号已存在")
-		}
-
-		member.Account = account
-		member.Password = password1
-		member.Role = conf.MemberGeneralRole
-		member.Avatar = conf.GetDefaultAvatar()
-		member.CreateAt = 0
-		member.Email = email
-		member.Status = 0
-		if err := member.Add(); err != nil {
+		if code, err := member.InsertAccount(account, password1, email); err != nil {
 			beego.Error(err)
-			c.JsonResult(6006, "注册失败，请联系系统管理员处理"+err.Error())
+			c.JsonResult(code, "注册失败:"+err.Error())
 		}
 
 		c.JsonResult(0, "ok", member)
@@ -440,7 +437,6 @@ func (c *AccountController) FindPassword() {
 		if !mailConf.EnableMail {
 			c.JsonResult(6004, "未启用邮件服务")
 		}
-
 		// 如果开启了验证码
 		if v, ok := c.Option["ENABLED_CAPTCHA"]; ok && strings.EqualFold(v, "true") {
 			v, ok := c.GetSession(conf.CaptchaSessionName).(string)
@@ -456,8 +452,9 @@ func (c *AccountController) FindPassword() {
 		if member.Status != 0 {
 			c.JsonResult(6007, "账号已被禁用")
 		}
-		if member.AuthMethod == conf.AuthMethodLDAP {
-			c.JsonResult(6011, "当前用户不支持找回密码")
+		// LDAP用户以及 第三方登录用户不支持找回密码（从源系统修改找回）
+		if member.AuthMethod == conf.AuthMethodLDAP || strings.Contains(member.AuthMethod, "third-auth") {
+			c.JsonResult(6011, "非本地用户不支持找回密码")
 		}
 
 		count, err := models.NewMemberToken().FindSendCount(email, time.Now().Add(-1*time.Hour), time.Now())
